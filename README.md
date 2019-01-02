@@ -157,3 +157,62 @@ MapperScannerConfigurer
 
 Spring与Mybatis整合的MapperScannerConfigurer处理过程源码分析
 https://www.cnblogs.com/fangjian0423/p/spring-mybatis-MapperScannerConfigurer-analysis.html
+
+![](https://i.imgur.com/1y7Ii7f.png)
+
+<pre>
+Mybatis主要成员
+
+      1) configuration
+         Mybatis所有的配置信息都保存在Configuration对象中，配置文件中的大部分类都会存储
+         在该类对象中。
+      2）Sqlsession
+         作为Mybatis工作的主要顶层API，标识和数据库交互时的会话，完成必要数据库增删改查功能。
+      3）Executor
+         Mybatis执行器，是Mybatis调度的核心，负责SQL语句的生成和查询缓存的维护。
+      5）StatementHandler
+         封装JDBC statement操作，负责对JDBC statement的操作，如设置参数等。
+      6）ParameterHandler
+         负责对用户传递的参数转换成jdbc statement所对应的数据类型
+      7）ResultSetHandler
+         负责将jdbc返回的ResultSet结果集对象转换成List类型的集合
+      8）TypeHandler
+         负责java数据类型和jdbc数据类型之间的映射和转换
+      9）MappedStatement
+         MappedStatement维护一条(select|insert|update|delete|query)节点的封装
+      10）sqlsource
+         负责根据用户传递的parameterObject，动态生成sql语句，将信息封装到BoundSql对象中，
+         并返回
+      11）BoundSql
+         标识动态生成的sql语句以及相应的参数信心
+</pre>
+
+###Mybatis缓存
+
+![](https://i.imgur.com/k2G3iL3.png)
+
+<pre>
+一级缓存是SqlSession级别的缓存，每个SqlSession对象都有一个哈希表用于缓存数据，不同
+SqlSession对象之间缓存不共享。同一个SqlSession对象对象执行2遍相同的SQL查询，在第一次查询执
+行完毕后将结果缓存起来，这样第二遍查询就不用向数据库查询了，直接返回缓存结果即可。MyBatis默认
+是开启一级缓存的。
+
+二级缓存是mapper级别的缓存，二级缓存是跨SqlSession的，多个SqlSession对象可以共享同一个二级
+缓存。不同的SqlSession对象执行两次相同的SQL语句，第一次会将查询结果进行缓存，第二次查询直接返
+回二级缓存中的结果即可。MyBatis默认是不开启二级缓存的，可以在配置文件中使用如下配置来开启二级
+缓存：
+<settings>
+    <setting name="cacheEnabled" value="true"/>
+</settings>
+
+当SQL语句进行更新操作(删除/添加/更新)时，会清空对应的缓存，保证缓存中存储的都是最新的数据。
+MyBatis的二级缓存对细粒度的数据级别的缓存实现不友好，比如如下需求：对商品信息进行缓存，由于商
+品信息查询访问量大，但是要求用户每次都能查询最新的商品信息，此时如果使用mybatis的二级缓存就无
+法实现当一个商品变化时只刷新该商品的缓存信息而不刷新其它商品的信息，因为mybaits的二级缓存区域
+以mapper为单位划分，当一个商品信息变化会将所有商品信息的缓存数据全部清空。解决此类问题需要在业
+务层根据需求对数据有针对性缓存，具体业务具体实现。
+</pre>
+
+MyBatis框架及原理分析
+
+https://www.cnblogs.com/luoxn28/p/6417892.html
